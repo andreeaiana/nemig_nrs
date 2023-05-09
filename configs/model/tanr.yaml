@@ -1,0 +1,22 @@
+_target_: src.models.tanr.tanr_module.TANRModule
+
+# news encoder 
+pretrained_word_embeddings_path: null
+word_embedding_dim: ${datamodule.word_embedding_dim}
+num_filters: 400
+window_size: 3
+query_vector_dim: 200
+dropout_probability: 0.2
+
+# category predictor
+num_topics: null
+topic_pred_loss_coef: 0.2 # lambda
+
+# evaluation
+num_polit_classes: null
+num_sent_classes: 4
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.00001

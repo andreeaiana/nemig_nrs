@@ -1,0 +1,18 @@
+_target_: src.models.nrms.nrms_module.NRMSModule
+
+# news encoder 
+pretrained_word_embeddings_path: null 
+word_embedding_dim: ${datamodule.word_embedding_dim}
+num_attention_heads: 15
+query_vector_dim: 200
+dropout_probability: 0.2
+
+# evaluation
+num_topics: null
+num_polit_classes: null
+num_sent_classes: 4
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.00001

@@ -1,0 +1,34 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: nemig.yaml
+  - override /model: nrms.yaml
+  - override /callbacks: default.yaml
+  - override /logger: wandb.yaml
+  - override /trainer: gpu.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["nrms"]
+
+seed: 42
+
+datamodule:
+  lang: en
+  id2index_filenames:
+    uid2index: 'uid2index_s42.tsv'
+
+model:
+  pretrained_word_embeddings_path: ${paths.data_dir}en/pretrained_word_embeddings.npy
+  num_topics: 41
+  num_polit_classes: 4
+
+logger:
+  wandb:
+    name: "nrms_en_s42"
+    tags: ${tags}
+    group: "en"

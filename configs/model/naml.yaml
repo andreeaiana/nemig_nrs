@@ -1,0 +1,21 @@
+_target_: src.models.naml.naml_module.NAMLModule
+
+# news encoder 
+dataset_attributes: ['title', 'abstract', 'category']
+pretrained_word_embeddings_path: null 
+word_embedding_dim: ${datamodule.word_embedding_dim}
+category_embedding_dim: 100
+num_categories: null
+num_filters: 400
+window_size: 3
+query_vector_dim: 200
+dropout_probability: 0.2
+
+# evaluation
+num_polit_classes: null
+num_sent_classes: 4
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.00001
