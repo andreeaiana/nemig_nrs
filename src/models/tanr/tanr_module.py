@@ -214,7 +214,7 @@ class TANRModule(LightningModule):
         self.log_dict(self.train_metrics, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
     def validation_step(self, batch: NemigBatch, batch_idx: int):
-        loss, preds, targets, cand_news_size, _, _, _, _, _, _, _ = self.model_step(batch)
+        loss, preds, targets, cand_news_size, _, _, _, _, _, _, _  = self.model_step(batch)
 
         # update and log loss
         self.val_loss(loss)
@@ -249,25 +249,25 @@ class TANRModule(LightningModule):
         # update and log loss
         self.test_loss(loss)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-
+        
         return {
-                "loss": loss, 
-                "preds": preds, 
-                "targets": targets, 
-                "cand_news_size": cand_news_size,
-                "hist_news_size": hist_news_size,
-                "target_politic": target_politic,
-                "target_categories": target_categories, 
-                "target_sentiments": target_sentiments,
-                "hist_politic": hist_politic,
-                "hist_categories": hist_categories, 
-                "hist_sentiments": hist_sentiments 
-                }
+            "loss": loss, 
+            "preds": preds, 
+            "targets": targets, 
+            "cand_news_size": cand_news_size,
+            "hist_news_size": hist_news_size,
+            "target_politic": target_politic,
+            "target_categories": target_categories, 
+            "target_sentiments": target_sentiments,
+            "hist_politic": hist_politic,
+            "hist_categories": hist_categories, 
+            "hist_sentiments": hist_sentiments 
+            }  
 
     def test_epoch_end(self, outputs: List[Any]):
         preds = torch.cat([o['preds'] for o in outputs])
         targets = torch.cat([o['targets'] for o in outputs])
-        
+       
         cand_news_size = torch.cat([o['cand_news_size'] for o in outputs])
         hist_news_size = torch.cat([o['hist_news_size'] for o in outputs])
         
@@ -304,4 +304,3 @@ class TANRModule(LightningModule):
         optimizer = self.hparams.optimizer(params=self.parameters())
         
         return {"optimizer": optimizer}
-

@@ -15,22 +15,22 @@ defaults:
 
 tags: ["dkn", "enriched_entities_2_hop"]
 
-seed: 42
+seed: 45
 
 datamodule:
-  lang: de
+  lang: en
   kg_type: enriched_entities_2_hop
   id2index_filenames:
-    uid2index: 'uid2index_s42.tsv'
+    uid2index: 'uid2index_s45.tsv'
 
 model:
-  pretrained_word_embeddings_path: ${paths.data_dir}de/pretrained_word_embeddings.npy
-  pretrained_entity_embeddings_path: ${paths.data_dir}de/pretrained_entity_embeddings_enriched_entities_2_hop.npy 
-  num_topics: 26
-  num_polit_classes: 5
+  pretrained_word_embeddings_path: ${paths.data_dir}en/pretrained_word_embeddings.npy
+  pretrained_entity_embeddings_path: ${paths.data_dir}en/pretrained_entity_embeddings_enriched_entities_2_hop.npy 
+  num_topics: 41
+  num_polit_classes: 4
 
 logger:
   wandb:
-    name: "dkn_de_enriched_entities_2_hop_s42"
+    name: "dkn_en_enriched_entities_2_hop_s45"
     tags: ${tags}
-    group: "de"
+    group: "en"

@@ -98,7 +98,7 @@ You can override any parameter from command line like this
 python src/train.py trainer.max_epochs=20 datamodule.batch_size=64
 ```
 
-To run DKN with pretrained entity embeddings, first download the NeMigKG version of your choice from [Zenodo](https://doi.org/10.5281/zenodo.7442424). Next, train entity embeddings with a KGE of your choice and store them in the [German](data/de/kg/) or [English](data/en/kg/) correspding KG folder.
+To run DKN or CAUM with pretrained entity embeddings, first download the NeMigKG version of your choice from [Zenodo](https://doi.org/10.5281/zenodo.7442424). Next, train entity embeddings with a KGE of your choice and store them in the [German](data/de/kg/) or [English](data/en/kg/) correspding KG folder.
 
 
 ## License

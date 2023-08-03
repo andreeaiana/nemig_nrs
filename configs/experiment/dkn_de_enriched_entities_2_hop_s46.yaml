@@ -15,13 +15,13 @@ defaults:
 
 tags: ["dkn", "enriched_entities_2_hop"]
 
-seed: 42
+seed: 46
 
 datamodule:
   lang: de
   kg_type: enriched_entities_2_hop
   id2index_filenames:
-    uid2index: 'uid2index_s42.tsv'
+    uid2index: 'uid2index_s46.tsv'
 
 model:
   pretrained_word_embeddings_path: ${paths.data_dir}de/pretrained_word_embeddings.npy
@@ -31,6 +31,6 @@ model:
 
 logger:
   wandb:
-    name: "dkn_de_enriched_entities_2_hop_s42"
+    name: "dkn_de_enriched_entities_2_hop_s46"
     tags: ${tags}
     group: "de"

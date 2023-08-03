@@ -1,0 +1,29 @@
+_target_: src.models.senti_debias.senti_debias_module.SentiDebiasModule
+
+# generator
+pretrained_word_embeddings_path: null 
+word_embedding_dim: 300
+num_attention_heads: 15
+query_vector_dim: 200
+dropout_probability: 0.2
+sent_embedding_dim: 256
+sent_hidden_dim: 400
+
+# loss coefficients
+alpha_coefficient: 0.15
+beta_coefficient: 10
+
+# evaluation
+num_categ_classes: null
+num_polit_classes: null
+num_sent_classes: 4
+
+optimizer_generator:
+  _target_: torch.optim.Adam
+  _partial_: True
+  lr: 0.00001
+
+optimizer_discriminator:
+  _target_: torch.optim.Adam
+  _partial_: True
+  lr: 0.00002

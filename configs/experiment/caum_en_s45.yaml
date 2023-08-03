@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: nemig.yaml
-  - override /model: dkn.yaml
+  - override /model: caum.yaml
   - override /callbacks: default.yaml
   - override /logger: wandb.yaml
   - override /trainer: gpu.yaml
@@ -13,24 +13,23 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["dkn", "enriched_entities_2_hop"]
+tags: ["caum"]
 
-seed: 42
+seed: 45
 
 datamodule:
-  lang: de
-  kg_type: enriched_entities_2_hop
+  lang: en
   id2index_filenames:
-    uid2index: 'uid2index_s42.tsv'
+    uid2index: 'uid2index_s45.tsv'
 
 model:
-  pretrained_word_embeddings_path: ${paths.data_dir}de/pretrained_word_embeddings.npy
-  pretrained_entity_embeddings_path: ${paths.data_dir}de/pretrained_entity_embeddings_enriched_entities_2_hop.npy 
-  num_topics: 26
-  num_polit_classes: 5
+  pretrained_word_embeddings_path: ${paths.data_dir}en/pretrained_word_embeddings.npy
+  pretrained_entity_embeddings_path: ${paths.data_dir}en/pretrained_entity_embeddings_enriched_entities_1_hop.npy  
+  num_categories: 41
+  num_polit_classes: 4
 
 logger:
   wandb:
-    name: "dkn_de_enriched_entities_2_hop_s42"
+    name: "caum_en_s45"
     tags: ${tags}
-    group: "de"
+    group: "en"

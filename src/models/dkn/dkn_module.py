@@ -177,7 +177,7 @@ class DKNModule(LightningModule):
         hist_sentiments = torch.cat([clicked_sentiments[n][mask_hist[n]] for n in range(mask_hist.shape[0])], dim=0).long() 
         
         return loss, preds, targets, cand_news_size, hist_news_size, target_politic, target_categories, target_sentiments, hist_politic, hist_categories, hist_sentiments 
-        
+
     def training_step(self, batch: NemigBatch, batch_idx: int):
         loss, preds, targets, cand_news_size, _, _, _, _, _, _, _ = self.model_step(batch)
 
@@ -194,7 +194,7 @@ class DKNModule(LightningModule):
                 "targets": targets, 
                 "cand_news_size": cand_news_size
                 }
-
+    
     def training_epoch_end(self, outputs: List[Any]):
         # `outputs` is a list of dicts returned from `training_step()`
         preds = torch.cat([o['preds'] for o in outputs])
@@ -241,20 +241,20 @@ class DKNModule(LightningModule):
         # update and log loss
         self.test_loss(loss)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-
+        
         return {
-                "loss": loss, 
-                "preds": preds, 
-                "targets": targets, 
-                "cand_news_size": cand_news_size,
-                "hist_news_size": hist_news_size,
-                "target_politic": target_politic,
-                "target_categories": target_categories, 
-                "target_sentiments": target_sentiments,
-                "hist_politic": hist_politic,
-                "hist_categories": hist_categories, 
-                "hist_sentiments": hist_sentiments 
-                }
+            "loss": loss, 
+            "preds": preds, 
+            "targets": targets, 
+            "cand_news_size": cand_news_size,
+            "hist_news_size": hist_news_size,
+            "target_politic": target_politic,
+            "target_categories": target_categories, 
+            "target_sentiments": target_sentiments,
+            "hist_politic": hist_politic,
+            "hist_categories": hist_categories, 
+            "hist_sentiments": hist_sentiments 
+            }  
 
     def test_epoch_end(self, outputs: List[Any]):
         preds = torch.cat([o['preds'] for o in outputs])
@@ -289,21 +289,10 @@ class DKNModule(LightningModule):
         self.log_dict(self.test_polit_pers_metrics, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log_dict(self.test_categ_pers_metrics, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log_dict(self.test_sent_pers_metrics, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-    
+
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         """
         optimizer = self.hparams.optimizer(params=self.parameters())
         
         return {"optimizer": optimizer}
-
-
-if __name__ == "__main__":
-    import hydra
-    import omegaconf
-    import pyrootutils
-
-    root = pyrootutils.setup_root(__file__, pythonpath=True)
-    cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "dkn.yaml")
-    _ = hydra.utils.instantiate(cfg)
-

@@ -10,22 +10,26 @@ from torchmetrics.retrieval import RetrievalMRR, RetrievalNormalizedDCG
 from torchmetrics import MeanMetric, MinMetric, MetricCollection
 
 from src.datamodules.components.nemig_batch import NemigBatch
-from src.models.nrms.news_encoder import NewsEncoder
-from src.models.nrms.user_encoder import UserEncoder
+from src.models.mins.news_encoder import NewsEncoder
+from src.models.mins.user_encoder import UserEncoder
 from src.models.components.click_predictors import DotProduct
 from src.metrics.diversity import Diversity
 from src.metrics.personalization import Personalization
 
 
-class NRMSModule(LightningModule):
+class MINSModule(LightningModule):
     def __init__(
             self,
+            dataset_attributes: List[str],
             pretrained_word_embeddings_path: str,
             word_embedding_dim: int,
+            category_embedding_dim: int,
+            num_categories: int,
             num_attention_heads: int,
             query_vector_dim: int,
+            num_filters: int,
+            num_gru_channels: int,
             dropout_probability: float,
-            num_topics: int,
             num_polit_classes: int,
             num_sent_classes: int,
             optimizer: torch.optim.Optimizer
@@ -42,23 +46,28 @@ class NRMSModule(LightningModule):
 
         # model components
         self.news_encoder = NewsEncoder(
+                dataset_attributes=self.hparams.dataset_attributes,
                 pretrained_word_embeddings=pretrained_word_embeddings,
                 word_embedding_dim=self.hparams.word_embedding_dim,
                 num_attention_heads=self.hparams.num_attention_heads,
                 query_vector_dim=self.hparams.query_vector_dim,
-                dropout_probability=self.hparams.dropout_probability
+                dropout_probability=self.hparams.dropout_probability,
+                num_categories=self.hparams.num_categories,
+                category_embedding_dim=self.hparams.category_embedding_dim
                 )
 
         # user encoder 
         self.user_encoder = UserEncoder(
                 word_embedding_dim=self.hparams.word_embedding_dim,
-                num_attention_heads=self.hparams.num_attention_heads,
-                query_vector_dim=self.hparams.query_vector_dim
+                query_vector_dim=self.hparams.query_vector_dim,
+                num_filters=self.hparams.num_filters,
+                num_gru_channels=self.hparams.num_gru_channels
                 )
 
         # click predictor
         self.click_predictor = DotProduct()
-      
+        
+        # loss fuction
         self.criterion = CrossEntropyLoss()
         
         # metric objects for calculating and averaging performance across batches        
@@ -77,8 +86,8 @@ class NRMSModule(LightningModule):
             'polit_div@6': Diversity(num_classes=self.hparams.num_polit_classes, k=6) 
             })
         categ_div_metrics = MetricCollection({
-            'categ_div@3': Diversity(num_classes=self.hparams.num_topics, k=3),
-            'categ_div@6': Diversity(num_classes=self.hparams.num_topics, k=6) 
+            'categ_div@3': Diversity(num_classes=self.hparams.num_categories, k=3),
+            'categ_div@6': Diversity(num_classes=self.hparams.num_categories, k=6) 
             })
         sent_div_metrics = MetricCollection({
             'sent_div@3': Diversity(num_classes=self.hparams.num_sent_classes, k=3),
@@ -89,8 +98,8 @@ class NRMSModule(LightningModule):
             'pol_pers@6': Personalization(num_classes=self.hparams.num_polit_classes, k=6) 
             })
         categ_pers_metrics = MetricCollection({
-            'categ_pers@3': Personalization(num_classes=self.hparams.num_topics, k=3),
-            'categ_pers@6': Personalization(num_classes=self.hparams.num_topics, k=6) 
+            'categ_pers@3': Personalization(num_classes=self.hparams.num_categories, k=3),
+            'categ_pers@6': Personalization(num_classes=self.hparams.num_categories, k=6) 
             })
         sent_pers_metrics = MetricCollection({
             'sent_pers@3': Personalization(num_classes=self.hparams.num_sent_classes, k=3),
@@ -113,15 +122,16 @@ class NRMSModule(LightningModule):
         
     def forward(self, batch: NemigBatch) -> torch.Tensor:
         # encode user history
-        clicked_news_vector = self.news_encoder(batch['x_hist']['title'])
-        clicked_news_vector_agg, _ = to_dense_batch(clicked_news_vector, batch['batch_hist'])
+        clicked_news_vector = self.news_encoder(batch['x_hist'])
+        clicked_news_vector_agg, mask_hist = to_dense_batch(clicked_news_vector, batch['batch_hist'])
 
         # encode candidate news
-        candidate_news_vector = self.news_encoder(batch['x_cand']['title'])
+        candidate_news_vector = self.news_encoder(batch['x_cand'])
         candidate_news_vector_agg, _ = to_dense_batch(candidate_news_vector, batch['batch_cand'])
         
         # encode user
-        user_vector = self.user_encoder(clicked_news_vector_agg)
+        hist_size = torch.tensor([torch.where(mask_hist[i])[0].shape[0] for i in range(mask_hist.shape[0])], device=self.device)
+        user_vector = self.user_encoder(clicked_news_vector_agg, hist_size)
         
         # click scores for candidate news
         scores = self.click_predictor(user_vector.unsqueeze(dim=1), candidate_news_vector_agg.permute(0, 2, 1))
@@ -135,6 +145,7 @@ class NRMSModule(LightningModule):
 
     def model_step(self, batch: NemigBatch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         scores = self(batch)
+        y_true, mask_cand = to_dense_batch(batch['labels'], batch['batch_cand'])
 
         candidate_politic, _ = to_dense_batch(batch['x_cand']['politic'], batch['batch_cand'])
         candidate_categories, _ = to_dense_batch(batch['x_cand']['category'], batch['batch_cand'])
@@ -144,13 +155,11 @@ class NRMSModule(LightningModule):
         clicked_categories, _ = to_dense_batch(batch['x_hist']['category'], batch['batch_hist'])
         clicked_sentiments, _ = to_dense_batch(batch['x_hist']['sentiment'], batch['batch_hist'])
         
-        y_true, mask_cand = to_dense_batch(batch['labels'], batch['batch_cand'])
         loss = self.criterion(scores, y_true)
         
         # predictions, targets, indexes for metric computation
         preds = torch.cat([scores[n][mask_cand[n]] for n in range(mask_cand.shape[0])], dim=0).detach()
         targets = torch.cat([y_true[n][mask_cand[n]] for n in range(mask_cand.shape[0])], dim=0).long() 
-        
         cand_news_size = torch.tensor([torch.where(mask_cand[n])[0].shape[0] for n in range(mask_cand.shape[0])])
         hist_news_size = torch.tensor([torch.where(mask_hist[n])[0].shape[0] for n in range(mask_hist.shape[0])])
         
@@ -163,7 +172,7 @@ class NRMSModule(LightningModule):
         hist_sentiments = torch.cat([clicked_sentiments[n][mask_hist[n]] for n in range(mask_hist.shape[0])], dim=0).long() 
         
         return loss, preds, targets, cand_news_size, hist_news_size, target_politic, target_categories, target_sentiments, hist_politic, hist_categories, hist_sentiments 
-        
+
     def training_step(self, batch: NemigBatch, batch_idx: int):
         loss, preds, targets, cand_news_size, _, _, _, _, _, _, _ = self.model_step(batch)
 
@@ -275,7 +284,7 @@ class NRMSModule(LightningModule):
         self.log_dict(self.test_polit_pers_metrics, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log_dict(self.test_categ_pers_metrics, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log_dict(self.test_sent_pers_metrics, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-
+    
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
         """

@@ -13,24 +13,24 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["dkn", "enriched_entities_2_hop"]
+tags: ["dkn", "entities_cnt_aut_kw_otl"]
 
-seed: 42
+seed: 44
 
 datamodule:
-  lang: de
-  kg_type: enriched_entities_2_hop
+  lang: en
+  kg_type: entities_cnt_aut_kw_otl
   id2index_filenames:
-    uid2index: 'uid2index_s42.tsv'
+    uid2index: 'uid2index_s44.tsv'
 
 model:
-  pretrained_word_embeddings_path: ${paths.data_dir}de/pretrained_word_embeddings.npy
-  pretrained_entity_embeddings_path: ${paths.data_dir}de/pretrained_entity_embeddings_enriched_entities_2_hop.npy 
-  num_topics: 26
-  num_polit_classes: 5
+  pretrained_word_embeddings_path: ${paths.data_dir}en/pretrained_word_embeddings.npy
+  pretrained_entity_embeddings_path: ${paths.data_dir}en/pretrained_entity_embeddings_entities_cnt_aut_kw_otl.npy 
+  num_topics: 41
+  num_polit_classes: 4
 
 logger:
   wandb:
-    name: "dkn_de_enriched_entities_2_hop_s42"
+    name: "dkn_en_entities_cnt_aut_kw_otl_s44"
     tags: ${tags}
-    group: "de"
+    group: "en"
