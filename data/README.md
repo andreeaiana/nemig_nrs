@@ -1,4 +1,4 @@
-# NeMig User Datasets
+# NeMig Datasets
 
 ## Overall Introduction
 The user data has been collected through online studies in Germany and the US. We used the participants' implicit feedback regarding their interest in an article to build their click history, and the explicit feedback in terms of news click behaviors to construct the impression logs. To protect user privacy, we assign each user an anonymized ID. The user data is intended for non-commercial research purposes and is available under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
